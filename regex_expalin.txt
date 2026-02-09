@@ -1,0 +1,71 @@
+{
+  // Keys in email headers we want to extract
+  "target_keys": ["Subject", "From", "To", "Date", "Reply-To", "Return-Path"],
+
+  "prepare": {
+    // Quoted-Printable soft line breaks (like =\n or =\r\n) are removed
+    "qp_soft_break": "=\\s*[\\r\\n]+",
+
+    // Multiple spaces or newlines are condensed
+    "multi_space": "\\s+",
+
+    // Base64 blocks: sequences of 50+ base64 chars, optionally separated by spaces
+    "base64_block": "(?:[A-Za-z0-9+/]{50,}(?:\\s+)?)+" 
+  },
+
+  "headers": {
+    // Main regex to extract any header value dynamically
+    // {key} will be replaced with "Subject", "From", etc.
+    // Matches everything until the next header line or end of string
+    "main": "^{key}:\\s*([\\s\\S]*?)(?=\\n\\S|$)",
+
+    // Fallback regex to extract email from "From" if angle brackets <...> exist
+    "from_fallback": "From:.*?\\n\\s*<(.*?)>"
+  },
+
+  "urls": {
+    // Extract URLs starting with http or https
+    // Skips any <script> blocks and stops at whitespace or quote characters
+    "extract": "https?://(?:<script>.*?</script>|[^\\s\"'<>])+",
+
+    // Extract nested URL parameters
+    // Looks for URLs inside query parameters like ?url=https://example.com
+    "nested": "[?&=](https?://[^\\s\"'<>]+)"
+  },
+
+  "attachments": {
+    // Extract the filename from Content-Disposition header
+    "filename": "filename=\"?([^\"\\n]+)\"?",
+
+    // Extract base64 content of an attachment by matching its filename first
+    // Then looks for "Content-Transfer-Encoding: base64" followed by the actual base64 data
+    "content_b64": "filename=\"{filename}\"[\\s\\S]+?Content-Transfer-Encoding:\\s*base64\\s*\\n\\n([A-Za-z0-9+/=\\r\\n]+?)\\n------="
+  },
+
+  "domain": {
+    // Extract domain from an email address (after @)
+    "email": "@([\\w.-]+)"
+  },
+
+  "ip": {
+    // Generic IPv4 pattern (1.2.3.4)
+    "base": "\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b",
+
+    // Extract client IP from "client-ip = ..." headers
+    "client": "client-ip\\s*=\\s*({ip})",
+
+    // Extract IP from spf=pass results
+    "spf": "spf=pass.*?({ip})"
+  },
+
+  "auth": {
+    // SPF: extract domain (or optional email) from "domain of ..." text
+    "SPF": "domain of\\s+([\\w\\.-]+@)?([\\w\\.-]+)",
+
+    // DKIM: extract domain from d= field in DKIM-Signature header
+    "DKIM": "dkim-signature:.*?d=([\\w\\.-]+)",
+
+    // DMARC: extract domain from "header.from" after dmarc=pass
+    "DMARC": "dmarc=pass.*?header\\.from=([\\w\\.-]+)"
+  }
+}
