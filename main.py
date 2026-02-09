@@ -59,7 +59,7 @@ def load_links():
 
 LINKS = load_links()
 
-# ------------------------------------------------------------------------------------------ Tooltip Class ---------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------------ Tooltip Class ------------------------------------------------------------------------------------
 
 class ToolTip:
     def __init__(self, widget, text, side="right"):
@@ -157,13 +157,8 @@ class EmailAnalzerEngine:
         seen = set()
         
         for u in found:
-            # 1. تنظيف الـ Quoted-Printable
             clean_u = u.replace('=3D', '=')
-            
-            # 2. تنظيف النهايات (بنشيل علامات الترقيم بس بنسيب الأقواس)
             clean_u = clean_u.strip().rstrip('.,;<()')
-            
-            # 3. فك ترميز الـ URL 
             clean_u = urllib.parse.unquote(clean_u)
             
             if clean_u not in seen and len(clean_u) > 10:
@@ -176,7 +171,6 @@ class EmailAnalzerEngine:
         attachments = []
 
         for f in set(files):
-            # نبحث عن الـ Base64 اللي مرتبط بالملف
             pattern_b64 = REGEX["attachments"].get("content_b64")
             raw_b64 = ""
             if pattern_b64:
@@ -184,7 +178,6 @@ class EmailAnalzerEngine:
                 if match:
                     raw_b64 = match.group(1).replace('\n', '').replace(' ', '')
 
-            # نحسب hash لو في بيانات
             file_hash = "N/A"
             if raw_b64:
                 try:
@@ -203,6 +196,7 @@ class EmailAnalzerEngine:
 
 
 # -------------------------------------------------------------------------------------- SplashScreen --------------------------------------------------------------------------------------
+
 class SplashScreen(ctk.CTk):
     def __init__(self):
         super().__init__()
@@ -216,9 +210,8 @@ class SplashScreen(ctk.CTk):
         self.config(background='#000001') 
         self.attributes("-transparentcolor", '#000001')
 
-        self.configure(fg_color='#000001') # لازم يكون نفس اللون اللي فوق
+        self.configure(fg_color='#000001')
         
-        # جعل النافذة في منتصف الشاشة بالضبط
         width, height = 600, 400
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
@@ -226,12 +219,10 @@ class SplashScreen(ctk.CTk):
         y = (screen_height // 2) - (height // 2)
         self.geometry(f"{width}x{height}+{x}+{y}")
 
-        # الإطار الخارجي بتصميم عصري
         self.frame = ctk.CTkFrame(self, fg_color=CARD_BG, corner_radius=20, 
                                   border_width=2, border_color=BLUE_MAIN)
         self.frame.pack(padx=10, pady=10, fill="both", expand=True)
 
-        # محتوى الشاشة
         self.title_label = ctk.CTkLabel(self.frame, text="     🛡️", font=("Segoe UI", 80))
         self.title_label.pack(pady=(60, 10))
 
@@ -253,10 +244,9 @@ class SplashScreen(ctk.CTk):
         self.status_label.pack()
 
     def start(self):
-        # محاكاة تحميل احترافي
         steps = ["Loading Engine.", "Loading Engine..", "Loading Engine...", "System Ready!"]
         for i in range(1, 101):
-            time.sleep(0.04) # سرعة التحميل
+            time.sleep(0.04)
             self.progress.set(i/100)
             if i % 25 == 0:
                 self.status_label.configure(text=steps[(i//25)-1])
@@ -265,6 +255,7 @@ class SplashScreen(ctk.CTk):
 
 
 # ------------------------------------------------------------------------------------------- Main App -------------------------------------------------------------------------------------
+
 class App(ctk.CTk):
     def __init__(self):
         super().__init__()
@@ -334,18 +325,14 @@ class App(ctk.CTk):
         data = self.input_text.get("0.0", "end").strip()
         if len(data) < 10: return
         
-        # بنغير العنوان مؤقتاً عشان المستخدم يعرف إن البرنامج شغال مش مهنج
         self.status_title.configure(text="ANALYZING...")
 
         def task():
-            # 1. التحليل بيتم هنا في الخلفية
             engine = EmailAnalzerEngine(data)
             
-            # 2. لما يخلص، بنطلب من البرنامج يرجع يحدث الواجهة (UI) من الـ Main Thread
             self.after(0, lambda: self.render_unified_results(engine, data))
             self.after(0, lambda: self.show_page("Results"))
 
-        # تشغيل الـ Thread
         threading.Thread(target=task, daemon=True).start()
 
     def extract_auth_domain(self, auth_type, data):
@@ -360,11 +347,9 @@ class App(ctk.CTk):
             if not match:
                 return None
 
-            # SPF بيرجع الدومين في الجروب التاني
             if auth_type == "SPF":
                 return match.group(2)
 
-            # DKIM و DMARC في الجروب الأول
             return match.group(1)
 
         except Exception:
@@ -379,7 +364,7 @@ class App(ctk.CTk):
 
         headers = engine.get_full_headers()
 
-        # --- ROW 1: METADATA & AUTH ---
+        # --- METADATA & AUTH ---
         row1 = ctk.CTkFrame(scroll, fg_color="transparent")
         row1.pack(fill="x", pady=(10, 20))
         
