@@ -1,7 +1,0 @@
-python -m PyInstaller --onefile --windowed --name PhishyEmailAnalyzer --icon=icon.ico --add-data "regex.json;." --add-data "links.json;." main.py
-
-
-AFTER YOU MADE THE EXE FILE PUT BEHIND THEM THE 
-1- links.json
-2- regex.json
-3- icon.ico
